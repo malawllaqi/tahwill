@@ -35,7 +35,7 @@ export const createConvert = os
       input.file.name.replace(/\.[^/.]+$/, "") +
       `.${input.format.toLowerCase()}`;
 
-    const image = new Blob([formatedImage], {
+    const image = new Blob([new Uint8Array(formatedImage)], {
       type: `image/${input.format.toLowerCase()}`,
     });
 
