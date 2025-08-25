@@ -1,6 +1,6 @@
 # Tahwill - Modern Image Conversion Made Simple
 
-![Tahwill Logo](./public/file.svg)
+<!-- ![Tahwill Logo](./public/file.svg) -->
 
 Tahwill is a powerful, web-based image conversion tool that makes transforming your images effortless. Built with modern web technologies, it provides a seamless experience for converting images between various formats while maintaining quality and efficiency.
 
