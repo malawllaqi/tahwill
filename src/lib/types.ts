@@ -6,5 +6,5 @@ export type FileInput = {
   id: string;
   file: File;
   format: FormatType | null;
-  resize: ResizeOptions;
+  resize: ResizeOptions | null;
 };

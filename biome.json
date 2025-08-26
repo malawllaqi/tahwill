@@ -20,6 +20,13 @@
       "recommended": true,
       "style": {
         "useTemplate": "off"
+      },
+      "a11y": {
+        "useSemanticElements": "off",
+        "noSvgWithoutTitle": "off"
+      },
+      "correctness": {
+        "useExhaustiveDependencies": "off"
       }
     },
     "domains": {
