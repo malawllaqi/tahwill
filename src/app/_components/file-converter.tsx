@@ -1,8 +1,8 @@
 "use client";
 import { Upload, X } from "lucide-react";
-import { useCallback, useContext } from "react";
+import { useCallback } from "react";
 import { toast } from "sonner";
-import { FileContext } from "@/components/providers/files-provider";
+import { useFiles } from "@/components/providers/files-provider";
 import { Button } from "@/components/ui/button";
 import {
   FileUpload,
@@ -15,14 +15,17 @@ import {
   FileUploadTrigger,
 } from "@/components/ui/file-upload";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { FILES_CONFIG } from "@/config/files-config";
+import { isFileExists } from "@/lib/utils";
+import { AddUrl } from "./add-url";
+import { ConverterType } from "./converter-type";
 
 export function FileConverter() {
-  const { files, addFile } = useContext(FileContext);
-
+  const { files, setFiles, addFile } = useFiles();
   const onFileValidate = useCallback(
     (file: File): string | null => {
       // Validate max files
-      if (files.length >= 2) {
+      if (files.length >= FILES_CONFIG.maxFiles) {
         return "You can only upload up to 2 files";
       }
 
@@ -32,9 +35,8 @@ export function FileConverter() {
       }
 
       // Validate file size (max 2MB)
-      const MAX_SIZE = 2 * 1024 * 1024; // 2MB
-      if (file.size > MAX_SIZE) {
-        return `File size must be less than ${MAX_SIZE / (1024 * 1024)}MB`;
+      if (file.size > FILES_CONFIG.maxSize) {
+        return `File size must be less than ${FILES_CONFIG.maxSize / (1024 * 1024)}MB`;
       }
 
       return null;
@@ -49,47 +51,68 @@ export function FileConverter() {
   }, []);
 
   return (
-    <FileUpload
-      value={files.map((file) => file.file)}
-      onValueChange={(f) => addFile(f[f.length - 1])}
-      onFileValidate={onFileValidate}
-      onFileReject={onFileReject}
-      accept="image/*"
-      maxFiles={10}
-      className="w-full max-w-md"
-      multiple
-    >
-      <FileUploadDropzone>
-        <div className="flex flex-col items-center gap-1">
-          <div className="flex items-center justify-center rounded-full border p-2.5">
-            <Upload className="size-6 text-muted-foreground" />
+    <div className="flex flex-col gap-4">
+      <FileUpload
+        maxFiles={FILES_CONFIG.maxFiles}
+        maxSize={FILES_CONFIG.maxSize}
+        value={files.map((file) => file.file)}
+        onAccept={(acceptedFiles) => {
+          // Add each accepted file
+          acceptedFiles.forEach((file) => {
+            return isFileExists(files, file)
+              ? toast.error(`"${file.name}" has already been uploaded`)
+              : addFile(file);
+          });
+        }}
+        onFileValidate={onFileValidate}
+        onFileReject={onFileReject}
+        accept="image/*"
+        className="w-full"
+        multiple
+      >
+        <FileUploadDropzone>
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex items-center justify-center rounded-full border p-2.5">
+              <Upload className="size-6 text-muted-foreground" />
+            </div>
+            <p className="font-medium text-sm">Drag & drop files here</p>
+            <p className="text-muted-foreground text-xs">
+              Or click to browse (max 2 files)
+            </p>
           </div>
-          <p className="font-medium text-sm">Drag & drop files here</p>
-          <p className="text-muted-foreground text-xs">
-            Or click to browse (max 2 files)
-          </p>
-        </div>
-        <FileUploadTrigger asChild>
-          <Button variant="outline" size="sm" className="mt-2 w-fit">
-            Browse files
-          </Button>
-        </FileUploadTrigger>
-      </FileUploadDropzone>
-      <ScrollArea className="max-h-[300px] overflow-y-auto">
-        <FileUploadList>
-          {files.map((file) => (
-            <FileUploadItem key={file.id} value={file.file}>
-              <FileUploadItemPreview />
-              <FileUploadItemMetadata />
-              <FileUploadItemDelete asChild>
-                <Button variant="ghost" size="icon" className="size-7">
-                  <X />
-                </Button>
-              </FileUploadItemDelete>
-            </FileUploadItem>
-          ))}
-        </FileUploadList>
-      </ScrollArea>
-    </FileUpload>
+          <FileUploadTrigger asChild>
+            <Button variant="outline" size="sm" className="mt-2 w-fit">
+              Browse files
+            </Button>
+          </FileUploadTrigger>
+        </FileUploadDropzone>
+        <AddUrl />
+        <ScrollArea className="max-h-[300px] overflow-y-auto">
+          <FileUploadList>
+            {files.map((file) => {
+              return (
+                <FileUploadItem key={file.id} value={file.file}>
+                  <FileUploadItemPreview />
+                  <FileUploadItemMetadata />
+                  <ConverterType file={file} />
+                  <FileUploadItemDelete asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-7"
+                      onClick={() =>
+                        setFiles(files.filter((f) => f.id !== file.id))
+                      }
+                    >
+                      <X />
+                    </Button>
+                  </FileUploadItemDelete>
+                </FileUploadItem>
+              );
+            })}
+          </FileUploadList>
+        </ScrollArea>
+      </FileUpload>
+    </div>
   );
 }

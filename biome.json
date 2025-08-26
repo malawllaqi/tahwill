@@ -27,6 +27,9 @@
       },
       "correctness": {
         "useExhaustiveDependencies": "off"
+      },
+      "suspicious": {
+        "useIterableCallbackReturn": "off"
       }
     },
     "domains": {

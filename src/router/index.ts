@@ -46,8 +46,18 @@ export const createConvert = os
     };
   });
 
+export const createConvertByUrl = os
+  .input(z.object({ url: z.string() }))
+  .output(z.object({ image: z.instanceof(Blob) }))
+  .handler(async ({ input }) => {
+    const response = await fetch(input.url);
+    const blob = await response.blob();
+    return { image: blob };
+  });
+
 export const router = {
   convert: {
     create: createConvert,
+    createByUrl: createConvertByUrl,
   },
 };
