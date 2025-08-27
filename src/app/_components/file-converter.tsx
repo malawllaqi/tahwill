@@ -1,5 +1,6 @@
 "use client";
 import { useMutation } from "@tanstack/react-query";
+import JSZip from "jszip";
 import { Download, Loader2, Play, Upload, X } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -22,19 +23,29 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { FILES_CONFIG } from "@/config/files-config";
+import { useDownload } from "@/hooks/use-download";
 import { orpc } from "@/lib/orpc";
 import type { FileInput } from "@/lib/types";
-import { downloadFile, isFileExists } from "@/lib/utils";
+import { isFileExists } from "@/lib/utils";
 import { AddUrl } from "./add-url";
 import { ConverterType } from "./converter-type";
 
 export function FileConverter() {
-  const { files, addFile } = useFiles();
+  const {
+    files,
+    addFile,
+    updateConverted,
+    filesToDownload,
+    setFilesToDownload,
+  } = useFiles();
 
+  const { handleZip } = useDownload();
   const { mutate, isPending } = useMutation(
     orpc.convert.createMany.mutationOptions({
       onSuccess: (output) => {
         toast.success("Files converted successfully!");
+        output.forEach((file) => updateConverted(file.id, true));
+        setFilesToDownload((prev) => [...prev, ...output]);
       },
       onError: () => {
         toast.error("Failed to convert files");
@@ -70,6 +81,20 @@ export function FileConverter() {
     });
   }, []);
 
+  function handleDownloadAll() {
+    handleZip(filesToDownload);
+  }
+
+  function handleConvertAll() {
+    mutate({
+      files: files.map((file) => ({
+        id: file.id,
+        file: file.file,
+        format: file.format!,
+        resize: file.resize ?? undefined,
+      })),
+    });
+  }
   const allConverted = useMemo(() => {
     return files.every((file) => file.converted);
   }, [files]);
@@ -81,7 +106,6 @@ export function FileConverter() {
         maxSize={FILES_CONFIG.maxSize}
         value={files.map((file) => file.file)}
         onAccept={(acceptedFiles) => {
-          // Add each accepted file
           acceptedFiles.forEach((file) => {
             return isFileExists(files, file)
               ? toast.error(`"${file.name}" has already been uploaded`)
@@ -120,8 +144,27 @@ export function FileConverter() {
         </ScrollArea>
       </FileUpload>
       {files.length > 1 && !allConverted ? (
-        <Button className="w-full cursor-pointer" variant={"outline"}>
+        <Button
+          className="w-full cursor-pointer"
+          variant={"outline"}
+          onClick={handleConvertAll}
+        >
           Convert all <Play className="size-3" />
+        </Button>
+      ) : null}
+      {filesToDownload.length > 1 ? (
+        <Button
+          className="w-full cursor-pointer"
+          variant={"outline"}
+          disabled={isPending}
+          onClick={handleDownloadAll}
+        >
+          Download all{" "}
+          {isPending ? (
+            <Loader2 className="size-3 animate-spin" />
+          ) : (
+            <Download className="size-3" />
+          )}
         </Button>
       ) : null}
     </div>
@@ -132,11 +175,12 @@ interface FileItemProps {
   file: FileInput;
 }
 function FileItem({ file }: FileItemProps) {
-  const { deleteFile, updateConverted } = useFiles();
+  const { deleteFile, updateConverted, setFilesToDownload } = useFiles();
   const [downloadedFile, setDownloadedFile] = useState<{
     blob: Blob;
     fileName: string;
   } | null>(null);
+  const { handleSingleFileDownload } = useDownload();
 
   const { mutate, isPending } = useMutation(
     orpc.convert.create.mutationOptions({
@@ -146,6 +190,10 @@ function FileItem({ file }: FileItemProps) {
           blob: new Blob([output.image]),
           fileName: output.fileName,
         });
+        setFilesToDownload((prev) => [
+          ...prev,
+          { image: new Blob([output.image]), fileName: output.fileName },
+        ]);
       },
     }),
   );
@@ -153,7 +201,7 @@ function FileItem({ file }: FileItemProps) {
   function handleDownload() {
     if (!downloadedFile) return;
 
-    downloadFile({
+    handleSingleFileDownload({
       blob: downloadedFile.blob,
       fileName: downloadedFile.fileName,
     });
@@ -191,6 +239,7 @@ function FileItem({ file }: FileItemProps) {
                     return;
                   }
                   mutate({
+                    id: file.id,
                     file: file.file,
                     format: file.format!,
                     resize: file.resize ?? undefined,

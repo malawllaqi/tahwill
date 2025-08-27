@@ -10,6 +10,11 @@ type FileContextType = {
   updateFile: (id: string, format: FormatType | null) => void;
   deleteFile: (id: string) => void;
   updateConverted: (id: string, converted: boolean) => void;
+  filesToDownload: { image: Blob; fileName: string }[];
+  setFilesToDownload: React.Dispatch<
+    React.SetStateAction<{ image: Blob; fileName: string }[]>
+  >;
+  isAllConverted: () => boolean;
 };
 export const FileContext = createContext<FileContextType>({
   files: [],
@@ -18,10 +23,16 @@ export const FileContext = createContext<FileContextType>({
   updateFile: () => {},
   deleteFile: () => {},
   updateConverted: () => {},
+  filesToDownload: [],
+  setFilesToDownload: () => {},
+  isAllConverted: () => false,
 });
 
 export function FilesProvider({ children }: { children: ReactNode }) {
   const [files, setFiles] = useState<FileInput[]>([]);
+  const [filesToDownload, setFilesToDownload] = useState<
+    { image: Blob; fileName: string }[]
+  >([]);
 
   function addFile(file: File) {
     setFiles((prevFiles) => [
@@ -49,6 +60,11 @@ export function FilesProvider({ children }: { children: ReactNode }) {
       ),
     );
   }
+
+  function isAllConverted() {
+    return files.every((file) => file.converted);
+  }
+
   return (
     <FileContext.Provider
       value={{
@@ -58,6 +74,9 @@ export function FilesProvider({ children }: { children: ReactNode }) {
         updateFile,
         deleteFile,
         updateConverted,
+        filesToDownload,
+        setFilesToDownload,
+        isAllConverted,
       }}
     >
       {children}

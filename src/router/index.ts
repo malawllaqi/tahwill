@@ -1,11 +1,10 @@
-import { randomUUID } from "node:crypto";
 import { call, os } from "@orpc/server";
 import sharp, { type ResizeOptions } from "sharp";
 import { z } from "zod";
 import type { FormatType } from "@/lib/types";
 
 const ConvertSchema = z.object({
-  //   id: z.string(),
+  id: z.string(),
   file: z.instanceof(File),
   format: z.custom<FormatType>(),
   resize: z.custom<ResizeOptions>().optional(),
@@ -40,7 +39,7 @@ export const createConvert = os
     });
 
     return {
-      id: randomUUID(),
+      id: input.id,
       image,
       fileName,
     };
@@ -53,12 +52,18 @@ const createConvertMany = os
     }),
   )
   .output(
-    z.array(z.object({ image: z.instanceof(Blob), fileName: z.string() })),
+    z.array(
+      z.object({
+        id: z.string(),
+        image: z.instanceof(Blob),
+        fileName: z.string(),
+      }),
+    ),
   )
   .handler(async ({ input }) => {
     const images = await Promise.all(
-      input.files.map(async ({ file, format, resize }) => {
-        const image = await call(createConvert, { file, format, resize });
+      input.files.map(async ({ id, file, format, resize }) => {
+        const image = await call(createConvert, { id, file, format, resize });
         return image;
       }),
     );
