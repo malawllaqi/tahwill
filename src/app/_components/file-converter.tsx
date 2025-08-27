@@ -1,6 +1,7 @@
 "use client";
-import { Upload, X } from "lucide-react";
-import { useCallback } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { Download, Loader2, Play, Upload, X } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useFiles } from "@/components/providers/files-provider";
 import { Button } from "@/components/ui/button";
@@ -15,13 +16,32 @@ import {
   FileUploadTrigger,
 } from "@/components/ui/file-upload";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { FILES_CONFIG } from "@/config/files-config";
-import { isFileExists } from "@/lib/utils";
+import { orpc } from "@/lib/orpc";
+import type { FileInput } from "@/lib/types";
+import { downloadFile, isFileExists } from "@/lib/utils";
 import { AddUrl } from "./add-url";
 import { ConverterType } from "./converter-type";
 
 export function FileConverter() {
-  const { files, setFiles, addFile } = useFiles();
+  const { files, addFile } = useFiles();
+
+  const { mutate, isPending } = useMutation(
+    orpc.convert.createMany.mutationOptions({
+      onSuccess: (output) => {
+        toast.success("Files converted successfully!");
+      },
+      onError: () => {
+        toast.error("Failed to convert files");
+      },
+    }),
+  );
+
   const onFileValidate = useCallback(
     (file: File): string | null => {
       // Validate max files
@@ -50,6 +70,10 @@ export function FileConverter() {
     });
   }, []);
 
+  const allConverted = useMemo(() => {
+    return files.every((file) => file.converted);
+  }, [files]);
+
   return (
     <div className="flex flex-col gap-4">
       <FileUpload
@@ -77,7 +101,7 @@ export function FileConverter() {
             </div>
             <p className="font-medium text-sm">Drag & drop files here</p>
             <p className="text-muted-foreground text-xs">
-              Or click to browse (max 2 files)
+              Or click to browse (max {FILES_CONFIG.maxFiles} files)
             </p>
           </div>
           <FileUploadTrigger asChild>
@@ -90,29 +114,112 @@ export function FileConverter() {
         <ScrollArea className="max-h-[300px] overflow-y-auto">
           <FileUploadList>
             {files.map((file) => {
-              return (
-                <FileUploadItem key={file.id} value={file.file}>
-                  <FileUploadItemPreview />
-                  <FileUploadItemMetadata />
-                  <ConverterType file={file} />
-                  <FileUploadItemDelete asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-7"
-                      onClick={() =>
-                        setFiles(files.filter((f) => f.id !== file.id))
-                      }
-                    >
-                      <X />
-                    </Button>
-                  </FileUploadItemDelete>
-                </FileUploadItem>
-              );
+              return <FileItem key={file.id} file={file} />;
             })}
           </FileUploadList>
         </ScrollArea>
       </FileUpload>
+      {files.length > 1 && !allConverted ? (
+        <Button className="w-full cursor-pointer" variant={"outline"}>
+          Convert all <Play className="size-3" />
+        </Button>
+      ) : null}
     </div>
+  );
+}
+
+interface FileItemProps {
+  file: FileInput;
+}
+function FileItem({ file }: FileItemProps) {
+  const { deleteFile, updateConverted } = useFiles();
+  const [downloadedFile, setDownloadedFile] = useState<{
+    blob: Blob;
+    fileName: string;
+  } | null>(null);
+
+  const { mutate, isPending } = useMutation(
+    orpc.convert.create.mutationOptions({
+      onSuccess: (output) => {
+        updateConverted(file.id, true);
+        setDownloadedFile({
+          blob: new Blob([output.image]),
+          fileName: output.fileName,
+        });
+      },
+    }),
+  );
+
+  function handleDownload() {
+    if (!downloadedFile) return;
+
+    downloadFile({
+      blob: downloadedFile.blob,
+      fileName: downloadedFile.fileName,
+    });
+  }
+
+  return (
+    <FileUploadItem key={file.id} value={file.file}>
+      <FileUploadItemPreview />
+      <FileUploadItemMetadata />
+
+      {!file.converted ? <ConverterType file={file} /> : null}
+      <Tooltip>
+        {file.converted ? (
+          <>
+            <TooltipTrigger asChild>
+              <Button size="sm" className="w-fit" onClick={handleDownload}>
+                <Download className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Download</p>
+            </TooltipContent>
+          </>
+        ) : (
+          <>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-fit"
+                disabled={isPending}
+                onClick={() => {
+                  if (!file.format) {
+                    toast.error("Please select a format");
+                    return;
+                  }
+                  mutate({
+                    file: file.file,
+                    format: file.format!,
+                    resize: file.resize ?? undefined,
+                  });
+                }}
+              >
+                {isPending ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Play className="size-4" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Convert</p>
+            </TooltipContent>
+          </>
+        )}
+      </Tooltip>
+      <FileUploadItemDelete asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-7"
+          onClick={() => deleteFile(file.id)}
+        >
+          <X />
+        </Button>
+      </FileUploadItemDelete>
+    </FileUploadItem>
   );
 }

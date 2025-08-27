@@ -7,4 +7,5 @@ export type FileInput = {
   file: File;
   format: FormatType | null;
   resize: ResizeOptions | null;
+  converted?: boolean;
 };

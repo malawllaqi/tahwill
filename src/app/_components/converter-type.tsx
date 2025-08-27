@@ -61,10 +61,13 @@ export function ConverterType({ file }: ConverterTypeProps) {
                             }
                             type="button"
                             onClick={() => {
+                              updateFile(
+                                file.id,
+                                format === selectedFormat ? null : format,
+                              );
                               setSelectedFormat((prev) =>
                                 prev === format ? null : format,
                               );
-                              updateFile(file.id, format);
                             }}
                             className="w-full uppercase text-xs"
                             size="sm"

@@ -7,17 +7,22 @@ type FileContextType = {
   files: FileInput[];
   setFiles: React.Dispatch<React.SetStateAction<FileInput[]>>;
   addFile: (file: File) => void;
-  updateFile: (id: string, format: FormatType) => void;
+  updateFile: (id: string, format: FormatType | null) => void;
+  deleteFile: (id: string) => void;
+  updateConverted: (id: string, converted: boolean) => void;
 };
 export const FileContext = createContext<FileContextType>({
   files: [],
   setFiles: () => {},
   addFile: () => {},
   updateFile: () => {},
+  deleteFile: () => {},
+  updateConverted: () => {},
 });
 
 export function FilesProvider({ children }: { children: ReactNode }) {
   const [files, setFiles] = useState<FileInput[]>([]);
+
   function addFile(file: File) {
     setFiles((prevFiles) => [
       ...prevFiles,
@@ -25,15 +30,36 @@ export function FilesProvider({ children }: { children: ReactNode }) {
     ]);
   }
 
-  function updateFile(id: string, format: FormatType) {
+  function updateFile(id: string, format: FormatType | null) {
     setFiles((prevFiles) =>
       prevFiles.map((prevFile) =>
         prevFile.id === id ? { ...prevFile, format } : prevFile,
       ),
     );
   }
+
+  function deleteFile(id: string) {
+    setFiles((prevFiles) => prevFiles.filter((file) => file.id !== id));
+  }
+
+  function updateConverted(id: string, converted: boolean) {
+    setFiles((prevFiles) =>
+      prevFiles.map((prevFile) =>
+        prevFile.id === id ? { ...prevFile, converted } : prevFile,
+      ),
+    );
+  }
   return (
-    <FileContext.Provider value={{ files, setFiles, addFile, updateFile }}>
+    <FileContext.Provider
+      value={{
+        files,
+        setFiles,
+        addFile,
+        updateFile,
+        deleteFile,
+        updateConverted,
+      }}
+    >
       {children}
     </FileContext.Provider>
   );
