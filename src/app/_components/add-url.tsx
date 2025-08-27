@@ -11,7 +11,7 @@ import { getLastPathSegment, isFileExists } from "@/lib/utils";
 export function AddUrl() {
   const { files, addFile } = useFiles();
   const [url, setUrl] = useState<string>("");
-  const { mutate } = useMutation(
+  const { mutate, isPending } = useMutation(
     orpc.convert.createByUrl.mutationOptions({
       onSuccess: ({ image }) => {
         const lastPathSegment = getLastPathSegment(url);
@@ -43,7 +43,7 @@ export function AddUrl() {
         <Button
           type="button"
           variant="outline"
-          disabled={!url}
+          disabled={!url || isPending}
           onClick={() => mutate({ url })}
         >
           Add URL

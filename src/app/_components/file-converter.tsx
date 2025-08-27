@@ -81,11 +81,9 @@ export function FileConverter() {
     });
   }, []);
 
-  function handleDownloadAll() {
-    handleZip(filesToDownload);
-  }
-
   function handleConvertAll() {
+    const isAllFormatted = files.every((file) => file.format);
+    if (!isAllFormatted) return toast.error("Please select a format");
     mutate({
       files: files.map((file) => ({
         id: file.id,
@@ -148,16 +146,21 @@ export function FileConverter() {
           className="w-full cursor-pointer"
           variant={"outline"}
           onClick={handleConvertAll}
+          disabled={isPending}
         >
-          Convert all <Play className="size-3" />
+          Convert all{" "}
+          {isPending ? (
+            <Loader2 className="size-3 animate-spin" />
+          ) : (
+            <Play className="size-3" />
+          )}
         </Button>
       ) : null}
       {filesToDownload.length > 1 ? (
         <Button
           className="w-full cursor-pointer"
           variant={"outline"}
-          disabled={isPending}
-          onClick={handleDownloadAll}
+          onClick={() => handleZip(filesToDownload)}
         >
           Download all{" "}
           {isPending ? (

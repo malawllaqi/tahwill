@@ -1,7 +1,7 @@
 import JSZip from "jszip";
-import { useId } from "react";
+import { v4 as uuidv4 } from "uuid";
 export const useDownload = () => {
-  const id = useId();
+  const id = uuidv4();
   async function handleZip(files: { image: Blob; fileName: string }[]) {
     const zip = new JSZip();
 
