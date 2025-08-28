@@ -45,7 +45,7 @@ export const createConvert = os
     };
   });
 
-const createConvertMany = os
+export const createConvertMany = os
   .input(
     z.object({
       files: z.array(ConvertSchema),
