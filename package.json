@@ -37,7 +37,7 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hook-form": "^7.62.0",
-    "sharp": "0.32.6",
+    "sharp": "0.33.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
     "uuid": "^11.1.0",
@@ -52,17 +52,5 @@
     "tailwindcss": "^4",
     "tw-animate-css": "^1.3.7",
     "typescript": "^5"
-  },
-  "pnpm": {
-    "supportedArchitectures": {
-      "os": [
-        "linux",
-        "current"
-      ],
-      "cpu": [
-        "x64",
-        "arm64"
-      ]
-    }
   }
 }

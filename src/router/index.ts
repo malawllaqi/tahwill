@@ -16,6 +16,13 @@ const ConvertOutputSchema = z.object({
   fileName: z.string(),
 });
 
+export const helloWorld = os
+  .input(z.object({ name: z.string() }))
+  .output(z.string())
+  .handler(async ({ input }) => {
+    return `Hello ${input.name}`;
+  });
+
 export const createConvert = os
   .input(ConvertSchema)
   .output(ConvertOutputSchema)
@@ -84,4 +91,5 @@ export const router = {
     createMany: createConvertMany,
     createByUrl: createConvertByUrl,
   },
+  helloWorld: helloWorld,
 };
