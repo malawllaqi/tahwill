@@ -9,7 +9,7 @@ export const FILES_CONFIG: FileConfig = {
   maxFiles: 10,
   maxSize: 5 * 1024 * 1024, // 5MB
   formatCategories: {
-    standard: [
+    image: [
       "avif",
       "gif",
       "heif",
@@ -23,9 +23,6 @@ export const FILES_CONFIG: FileConfig = {
       "tif",
       "webp",
     ],
-
-    specialized: ["dcraw", "exr", "fits", "ppm", "rad", "raw", "openslide"],
-
     other: ["dz", "magick", "pdf", "v", "input"],
   },
 };
