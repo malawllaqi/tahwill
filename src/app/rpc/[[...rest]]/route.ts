@@ -1,6 +1,11 @@
 import { RPCHandler } from "@orpc/server/fetch";
 import { router } from "@/router";
 
+// Configure runtime for Vercel
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const maxDuration = 30;
+
 const handler = new RPCHandler(router);
 
 async function handleRequest(request: Request) {
