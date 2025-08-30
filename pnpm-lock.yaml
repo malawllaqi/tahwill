@@ -106,7 +106,7 @@ importers:
         version: 11.1.0
       zod:
         specifier: ^4.1.1
-        version: 4.1.4
+        version: 4.1.5
     devDependencies:
       '@biomejs/biome':
         specifier: 2.2.0
@@ -1398,8 +1398,8 @@ packages:
     resolution: {integrity: sha512-YgvUTfwqyc7UXVMrB+SImsVYSmTS8X/tSrtdNZMImM+n7+QTriRXyXim0mBrTXNeqzVF0KWGgHPeiyViFFrNDw==}
     engines: {node: '>=18'}
 
-  zod@4.1.4:
-    resolution: {integrity: sha512-2YqJuWkU6IIK9qcE4k1lLLhyZ6zFw7XVRdQGpV97jEIZwTrscUw+DY31Xczd8nwaoksyJUIxCojZXwckJovWxA==}
+  zod@4.1.5:
+    resolution: {integrity: sha512-rcUUZqlLJgBC33IT3PNMgsCq6TzLQEG/Ei/KTCU0PedSWRMAXoOUN+4t/0H+Q8bdnLPdqUYnvboJT0bn/229qg==}
 
 snapshots:
 
@@ -2573,4 +2573,4 @@ snapshots:
 
   yallist@5.0.0: {}
 
-  zod@4.1.4: {}
+  zod@4.1.5: {}
