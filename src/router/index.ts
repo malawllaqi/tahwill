@@ -3,29 +3,22 @@ import sharp, { type ResizeOptions } from "sharp";
 import { z } from "zod";
 import type { FormatType } from "@/lib/types";
 
-const ConvertSchema = z.object({
+const FormatSchemaInput = z.object({
   id: z.string(),
   file: z.instanceof(File),
   format: z.custom<FormatType>(),
   resize: z.custom<ResizeOptions>().optional(),
 });
 
-const ConvertOutputSchema = z.object({
+const FormatOutputSchema = z.object({
   id: z.string(),
   image: z.instanceof(Blob),
   fileName: z.string(),
 });
 
-export const helloWorld = os
-  .input(z.object({ name: z.string() }))
-  .output(z.string())
-  .handler(async ({ input }) => {
-    return `Hello ${input.name}`;
-  });
-
-export const createConvert = os
-  .input(ConvertSchema)
-  .output(ConvertOutputSchema)
+export const createFormat = os
+  .input(FormatSchemaInput)
+  .output(FormatOutputSchema)
   .handler(async ({ input }) => {
     const buffer = Buffer.from(await input.file.arrayBuffer());
     const formatedImage = await sharp(buffer)
@@ -52,10 +45,10 @@ export const createConvert = os
     };
   });
 
-export const createConvertMany = os
+export const createFormatMany = os
   .input(
     z.object({
-      files: z.array(ConvertSchema),
+      files: z.array(FormatSchemaInput),
     }),
   )
   .output(
@@ -70,13 +63,13 @@ export const createConvertMany = os
   .handler(async ({ input }) => {
     const images = await Promise.all(
       input.files.map(async ({ id, file, format, resize }) => {
-        const image = await call(createConvert, { id, file, format, resize });
+        const image = await call(createFormat, { id, file, format, resize });
         return image;
       }),
     );
     return images;
   });
-export const createConvertByUrl = os
+export const createFormatByUrl = os
   .input(z.object({ url: z.string() }))
   .output(z.object({ image: z.instanceof(Blob) }))
   .handler(async ({ input }) => {
@@ -87,9 +80,8 @@ export const createConvertByUrl = os
 
 export const router = {
   convert: {
-    create: createConvert,
-    createMany: createConvertMany,
-    createByUrl: createConvertByUrl,
+    create: createFormat,
+    createMany: createFormatMany,
+    createByUrl: createFormatByUrl,
   },
-  helloWorld: helloWorld,
 };

@@ -1,6 +1,5 @@
 "use client";
 import { useMutation } from "@tanstack/react-query";
-import JSZip from "jszip";
 import { Download, Loader2, Play, Upload, X } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
